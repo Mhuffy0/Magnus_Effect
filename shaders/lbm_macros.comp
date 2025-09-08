@@ -1,0 +1,31 @@
+#version 430
+layout(local_size_x=16, local_size_y=16) in;
+
+layout(binding=0, r32f)  uniform readonly  image2DArray fA; // current populations
+layout(binding=1, r32f)  uniform writeonly image2D rhoTex;   // density
+layout(binding=2, rg32f) uniform writeonly image2D uTex;     // velocity
+layout(std140, binding=3) uniform Sz { ivec2 size; } S;
+
+const vec2 c[9] = vec2[9](
+  vec2(0.0,0.0), vec2(1.0,0.0), vec2(0.0,1.0), vec2(-1.0,0.0), vec2(0.0,-1.0),
+  vec2(1.0,1.0), vec2(-1.0,1.0), vec2(-1.0,-1.0), vec2(1.0,-1.0)
+);
+
+void main(){
+  ivec2 p = ivec2(gl_GlobalInvocationID.xy);
+  if (any(greaterThanEqual(p, S.size))) return;
+
+  float rho = 0.0;
+  vec2  u   = vec2(0.0);
+
+  for (int i=0; i<9; ++i) {
+    float fi = imageLoad(fA, ivec3(p, i)).r;  // fA เป็น image2DArray → ต้องใช้ ivec3(p, layer)
+    rho += fi;
+    u   += fi * c[i];
+  }
+
+  u /= max(rho, 1e-6);
+
+  imageStore(rhoTex, p, vec4(rho, 0.0, 0.0, 0.0));  // r32f ใช้เฉพาะ .r
+  imageStore(uTex,   p, vec4(u,   0.0, 0.0));       // rg32f ใช้ .rg → เติมอีกสองคอมโพเนนต์ให้ครบ 4
+}

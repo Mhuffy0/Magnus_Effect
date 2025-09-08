@@ -1,0 +1,34 @@
+#version 430
+layout(local_size_x=16, local_size_y=16) in;
+layout(binding=0, rg32f) uniform writeonly image2D uTex;
+
+layout(std140, binding=1) uniform Params {
+    ivec2 size;    // ขนาดโดเมนพิกเซล
+    vec2  center;  // ตำแหน่งศูนย์กลางกระบอก (พิกเซล)
+    float R;       // รัศมี (พิกเซล)
+    float Uin;     // ความเร็วลม uniform (ไปทาง +x)
+    float omega;   // ความเร็วเชิงมุมของลูกบอล (rad/s แบบ normalized)
+} P;
+
+// ศักย์ไหลรอบกระบอก + วอร์เท็กซ์:
+// u_r  = U cosθ (1 - R^2/r^2)
+// u_θ  = -U sinθ (1 + R^2/r^2) + Γ/(2π r),  โดย Γ = 2π R^2 ω  ⇒  Γ/(2π r) = (R^2 ω)/r
+void main(){
+    ivec2 p = ivec2(gl_GlobalInvocationID.xy);
+    if (any(greaterThanEqual(p, P.size))) return;
+
+    vec2 x = vec2(p) - P.center;       // พิกัดสัมพัทธ์
+    float r = length(x);
+    vec2 u = vec2(P.Uin, 0.0);         // ถ้าไกลมากให้เป็นลมตรง
+
+    if (r > 1e-3) {
+        float R2 = P.R * P.R, r2 = r*r;
+        float cosT = x.x / r, sinT = x.y / r;
+        float ur  = P.Uin * cosT * (1.0 - R2/r2);
+        float uth = -P.Uin * sinT * (1.0 + R2/r2) + (R2 * P.omega) / r;
+        // กลับเป็นคาร์ทีเซียน
+        u = vec2( ur*cosT - uth*sinT, ur*sinT + uth*cosT );
+    }
+    if (r < P.R) u = vec2(0.0);        // ด้านในลูกบอลให้ 0
+    imageStore(uTex, p, vec4(u, 0, 0));
+}
