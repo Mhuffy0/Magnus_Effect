@@ -130,7 +130,7 @@ struct Line {
   }
 };
 
-// ฟิลด์ความเร็วจาก “ศักย์ไหลรอบกระบอกหมุน” (ชัด Magnus)
+// ฟิลด์ความเร็วจาก “ศักย์ไหลรอบกระบอกหมุน” 
 // r>=R:  v_r = U(1-R^2/r^2)cosθ
 //        v_θ = -U(1+R^2/r^2)sinθ + Γ/(2πr),  Γ = 2π R^2 Ω
 static Vec2 velocityField(Vec2 pos, Vec2 ballC, const Params& P){
@@ -263,7 +263,7 @@ int main(){
         if(line.p.x > W + P.rightMargin){
           line.reset(P.leftMargin, line.y0);
         }
-        // กันไม่ให้หลุดบน-ล่างมากไป (แต่อย่าบังคับ)
+        // กันไม่ให้หลุดบน-ล่างมากไป
         if(line.p.y < -100) line.p.y = -100;
         if(line.p.y > H+100) line.p.y = H+100;
       }
@@ -273,8 +273,6 @@ int main(){
     glViewport(0,0,W,H);
     glClearColor(0,0,0,1);
     glClear(GL_COLOR_BUFFER_BIT);
-    static float spinAngle = 0.0f;
-    spinAngle += P.spin * dt;  // ให้ภาพหมุนตามสปินปัจจุบัน
     
     // background + red ball
     glUseProgram(progBG);
@@ -284,7 +282,7 @@ int main(){
     glBindVertexArray(quadVAO);
     glDrawArrays(GL_TRIANGLE_FAN,0,4);
 
-    // build vertex buffer for all lines (ตำแหน่ง+สี)
+    // build vertex buffer for all lines
     std::vector<float> vbuf; vbuf.reserve(P.linesN * P.maxSamples * 6);
     for(int i=0;i<P.linesN;i++){
       const Line& line = L[i];
