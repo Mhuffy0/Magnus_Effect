@@ -5,7 +5,7 @@
 #include <string>
 #include <vector>
 
-// ---------- local helpers (ไม่ประกาศใน header เพื่อลดชื่อชนกัน) ----------
+// ---------- local helpers ----------
 static std::string readFileText(const char* path) {
     std::ifstream f(path, std::ios::binary);
     if (!f) {
@@ -66,8 +66,8 @@ GLuint createProgramFromFiles(const std::string& vsPath,
     GLuint fs = compileShader(GL_FRAGMENT_SHADER, fsrc.c_str(), fsPath.c_str());
     if (!vs || !fs) { if (vs) glDeleteShader(vs); if (fs) glDeleteShader(fs); return 0; }
 
-    // ตรงกับ shader: attribute 0 ชื่อ aPos
+    //attribute 0 ชื่อ aPos
     GLuint prog = linkProgram({ vs, fs });
-    if (prog) glBindAttribLocation(prog, 0, "aPos"); // จะมีผลตอน link; ถ้าต้องการชัวร์ก็ bind ก่อน link (ย้ายขึ้นได้)
+    if (prog) glBindAttribLocation(prog, 0, "aPos"); // จะมีผลตอน link; ถ้าต้องการชัวร์ก็ bind ก่อน link
     return prog;
 }
